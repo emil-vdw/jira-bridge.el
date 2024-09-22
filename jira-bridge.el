@@ -112,7 +112,7 @@
 
 
 (defun jira-bridge/issue-data-to-org-task (issue-data level task-data)
-  ""
+  "Convert Jira issue data into an Org Mode task at LEVEL with optional TASK-DATA."
   (let* ((key (alist-get 'key issue-data))
          (fields (alist-get 'fields issue-data))
          (summary (alist-get 'summary fields))
@@ -172,8 +172,6 @@
 
 (defun jira-bridge/pull-issue (issue-key &optional level task-data)
   "Create an Org Mode item from Jira issue data."
-  (interactive "sJira issue key: ")
-
   (message "Fetching Jira issue %s" issue-key)
   (let* ((level (or level 1))
          (issue-data (jira-bridge/fetch-issue issue-key))
@@ -196,6 +194,19 @@
          (apply 'concat (--map (concat "\n\n"
                                        (jira-bridge/pull-issue it (+ level 1)))
                                child-issue-keys)))))))
+
+
+(defun jira-bridge/insert-issue (issue-id)
+  "Insert the corresponding Org Mode task at point for ISSUE-ID Jira issue key or URL."
+  (interactive "sJira issue key or url: ")
+  (let ((issue-key
+         ;; Try to extract the issue key from what is assumed to be an issue
+         ;; URL, if that fails, we will assume that the user supplied the issue
+         ;; key directly.
+         (condition-case err
+             (jira-bridge/extract-issue-key-from-url issue-id)
+           (error issue-id))))
+    (insert (jira-bridge/pull-issue issue-key))))
 
 
 (provide 'jira-bridge)
