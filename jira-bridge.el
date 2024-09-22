@@ -115,7 +115,7 @@
          (fields (alist-get 'fields issue-data))
          (summary (alist-get 'summary fields))
          (raw-description (alist-get 'description fields))
-         (description (jira-bridge/extract-description-text raw-description))
+         (description (jira-bridge/description-to-org raw-description level))
          (status (jira-bridge/alist-get-in fields '(status name)))
          (priority (jira-bridge/alist-get-in fields '(priority name)))
          (assignee (jira-bridge/alist-get-in fields '(assignee displayName)))

@@ -3,10 +3,6 @@
 (defcustom jira-bridge/paragraph-transformers
   `((paragraph . jira-bridge/paragraph-to-org)
     (heading . jira-bridge/heading-to-org)
-    ;; (rule . nil)
-    ;; (bulletList . nil)
-    ;; (listItem . nil)
-    ;; (numberedList . nil)
     (bulletList . ,(lambda (node) (jira-bridge/list-to-org node "- ")))
     (numberedList . ,(lambda (node) (jira-bridge/list-to-org node "1. ")))
     (listItem . jira-bridge/list-item-to-org)
@@ -32,10 +28,15 @@
                       #'jira-bridge/node-to-org-default)
            node))
 
-(defun jira-bridge/description-to-org (description)
+(defun jira-bridge/description-to-org (description level)
   "Convert Jira issue DESCRIPTION content to Org-mode syntax."
   (let ((content (alist-get 'content description)))
-    (mapconcat #'jira-bridge/node-to-org content "\n")))
+    (concat
+     (make-string (+ (or level 1) 1) ?*)
+     " Description"
+     "\n"
+     (mapconcat
+      #'jira-bridge/node-to-org content "\n"))))
 
 (defun jira-bridge/list-item-to-org (node &optional prefix)
   "Convert a Jira list item NODE to Org-mode list item."
@@ -101,8 +102,11 @@ segment at a time."
          (content (mapconcat #'jira-bridge/node-to-org
                              (alist-get 'content node)
                              "")))
-    (concat (when (> level 1) "\n")
-            (make-string level ?*) " " content "\n")))
+    (concat (make-string
+             ;; Increase the indent by 2 to account for the issue on
+             ;; level 1, and the actual description heading at level
+             ;; 2.
+             (+ level 2) ?*) " " content "\n")))
 
 (defun jira-bridge/paragraph-to-org (node)
   "Convert a Jira paragraph NODE to Org-mode paragraph."
