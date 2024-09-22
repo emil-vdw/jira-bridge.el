@@ -31,6 +31,10 @@
 (require 'auth-source)
 (require 'url-parse)
 
+;;; internal
+(require 'jira-bridge-core)
+(require 'jira-bridge-translator)
+
 (defcustom jira-bridge/base-url nil
   "Base URL for the Jira instance.")
 
@@ -38,6 +42,9 @@
   ;; Items not in this alist will default to the uppercase Jira status.
   '(("To Do" . "TODO"))
   "A map to convert Jira statuses to org todo statuses.")
+
+(defcustom jira-bridge/pull-child-issues t
+  "Whether to pull child issues of the specified issue.")
 
 (defun jira-bridge/api-url (&optional endpoint)
   "Construct the API URL to use when making requests."
@@ -86,15 +93,6 @@
 (defun jira-bridge/fetch-issue (issue-number)
   "Fetch the data of Jira issue with ISSUE-NUMBER."
   (jira-bridge/api-get (concat "issue/" issue-number) '(("showSubTasks" . "true"))))
-
-
-(defun jira-bridge/alist-get-in (alist keys)
-  "Recursively get a value from ALIST using KEYS."
-  (let ((value alist))
-    (dolist (key keys value)
-      (setq value (if (listp value)
-                      (alist-get key value nil nil #'equal)
-                    nil)))))
 
 (defun jira-bridge/extract-description-text (description)
   "Extract plain text from the description field."
@@ -176,17 +174,20 @@
   (let* ((level (or level 1))
          (issue-data (jira-bridge/fetch-issue issue-key))
          (issue-type (jira-bridge/alist-get-in issue-data
-                                               '(fields issuetype name))))
+                                               '(fields issuetype name)))
+         (has-child-issues (or (equal issue-type "Epic")
+                               ;; This could be a normal task with child issues.
+                               (not (seq-empty-p
+                                     (jira-bridge/alist-get-in issue-data
+                                                               '(fields subtasks)))))))
     ;; Format the Org item.
     (concat
      (jira-bridge/issue-data-to-org-task issue-data level task-data)
 
      ;; If the issue is an Epic, meaning it has subtasks, fetch and include all
      ;; subtasks as child org tasks.
-     (when (or (equal issue-type "Epic")
-               ;; This could be a normal task with child issues.
-               (not (seq-empty-p
-                     (jira-bridge/alist-get-in issue-data '(fields subtasks)))))
+     (when (and jira-bridge/pull-child-issues
+                )
        (let* ((child-issues-response
                (jira-bridge/api-get "search"
                                     `(("jql" . ,(concat "parent=" issue-key))
