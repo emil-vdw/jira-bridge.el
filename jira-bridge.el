@@ -111,11 +111,9 @@
      "\n")))
 
 
-(defun jira-bridge/pull-issue (issue-key &optional depth)
-  "Create an Org Mode item from Jira issue data."
-  (let* ((depth (or depth 1))
-         (issue-data (jira-bridge/fetch-issue issue-key))
-         (key (alist-get 'key issue-data))
+(defun jira-bridge/issue-data-to-org-task (issue-data level task-data)
+  ""
+  (let* ((key (alist-get 'key issue-data))
          (fields (alist-get 'fields issue-data))
          (summary (alist-get 'summary fields))
          (raw-description (alist-get 'description fields))
@@ -135,17 +133,25 @@
                              ((string= priority "Lowest") ?E)
                              (t ?C))))
     ;; Format the Org item.
-    (message "status: %s" status)
     (concat
      ;; Indent child issues.
-     (apply #'concat (-repeat depth "*"))
+     (apply #'concat (-repeat level "*"))
      " "
      (alist-get status jira-bridge/jira-status-to-org-status
                 (upcase status)
                 nil
                 #'equal)
      " "
-     (format "[#%c] %s\n" org-priority summary)
+     (format "[#%c] %s" org-priority summary)
+     ;; If tags were supplied, add them.
+     (when (plist-get task-data :tags)
+       (concat
+        " "
+        ":"
+        (string-join
+         (plist-get task-data :tags) ":")
+        ":"))
+     "\n"
 
      ;; Construct the task's properties from the Jira data.
      ":PROPERTIES:\n"
@@ -157,21 +163,38 @@
      (format ":STATUS: %s\n" status)
      (format ":ASSIGNEE: %s\n" (or assignee "Unassigned"))
      (format ":PROJECT: %s\n" project)
+     ;; If additional properties have been supplied, add them.
+     (when (plist-get task-data :properties)
+       (concat (--map (concat ":" (car it) ": " (cdr it) "\n")
+                      (plist-get task-data :properties))))
      ":END:\n\n"
-     description
+     description)))
+
+(defun jira-bridge/pull-issue (issue-key &optional level task-data)
+  "Create an Org Mode item from Jira issue data."
+  (interactive "sJira issue key: ")
+
+  (message "Fetching Jira issue %s" issue-key)
+  (let* ((level (or level 1))
+         (issue-data (jira-bridge/fetch-issue issue-key))
+         (issue-type (jira-bridge/alist-get-in issue-data
+                                               '(fields issuetype name))))
+    ;; Format the Org item.
+    (concat
+     (jira-bridge/issue-data-to-org-task issue-data level task-data)
 
      ;; If the issue is an Epic, meaning it has subtasks, fetch and include all
      ;; subtasks as child org tasks.
      (when (equal issue-type "Epic")
        (let* ((child-issues-response
                (jira-bridge/api-get "search"
-                                    `(("jql" . ,(concat "parent=" key))
+                                    `(("jql" . ,(concat "parent=" issue-key))
                                       ("fields" . "key"))))
               ;; Vector of child issue objecs.
               (child-issue-data (alist-get 'issues child-issues-response))
               (child-issue-keys (--map (alist-get 'key it) child-issue-data)))
          (apply 'concat (--map (concat "\n\n"
-                                       (jira-bridge/pull-issue it (+ depth 1)))
+                                       (jira-bridge/pull-issue it (+ level 1)))
                                child-issue-keys)))))))
 
 
