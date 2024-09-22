@@ -183,7 +183,10 @@
 
      ;; If the issue is an Epic, meaning it has subtasks, fetch and include all
      ;; subtasks as child org tasks.
-     (when (equal issue-type "Epic")
+     (when (or (equal issue-type "Epic")
+               ;; This could be a normal task with child issues.
+               (not (seq-empty-p
+                     (jira-bridge/alist-get-in issue-data '(fields subtasks)))))
        (let* ((child-issues-response
                (jira-bridge/api-get "search"
                                     `(("jql" . ,(concat "parent=" issue-key))
