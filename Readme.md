@@ -31,7 +31,7 @@ First, ensure you have Elpaca set up in your Emacs configuration. Then add the f
   :ensure (:type git :host github :repo "emil-vdw/jira-bridge.el")
   :config
   ;; Set your Jira base URL.
-  (setq jira-bridge/base-url "https://your-jira-instance.atlassian.net/")
+  (jira-bridge/base-url "https://your-jira-instance.atlassian.net/")
   ;; Customize Jira status to org status conversions.
   (jira-bridge/jira-status-to-org-status '(("To Do" . "TODO")
                                            ("In Progress" . "BUSY"))))
