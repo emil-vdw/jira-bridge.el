@@ -156,7 +156,7 @@
      ;; Construct the task's properties from the Jira data.
      ":PROPERTIES:\n"
      (format ":JIRA_HOST: %s\n" jira-bridge/base-url)
-     (format ":ISSUE_URL: %s\n" (concat jira-bridge/base-url "browse/" issue-key))
+     (format ":ISSUE_URL: %s\n" (concat jira-bridge/base-url "browse/" key))
      (format ":ISSUE_NUMBER: %s\n" key)
      (format ":ISSUE_TYPE: %s\n" issue-type)
      (format ":ISSUE_CREATED: %s\n" created)
