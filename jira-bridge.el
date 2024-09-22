@@ -126,7 +126,6 @@
          (issue-type (jira-bridge/alist-get-in fields '(issuetype name)))
          (project (jira-bridge/alist-get-in fields '(project name)))
          (created (alist-get 'created fields))
-         (updated (alist-get 'updated fields))
          (url (alist-get 'self issue-data))
          ;; Map Jira priority to Org priority.
          (org-priority (cond ((string= priority "Highest") ?A)
@@ -150,9 +149,11 @@
 
      ;; Construct the task's properties from the Jira data.
      ":PROPERTIES:\n"
-     (format ":ISSUE_URL: %s\n" "temp")
+     (format ":JIRA_HOST: %s\n" jira-bridge/base-url)
+     (format ":ISSUE_URL: %s\n" (concat jira-bridge/base-url "browse/" issue-key))
      (format ":ISSUE_NUMBER: %s\n" key)
      (format ":ISSUE_TYPE: %s\n" issue-type)
+     (format ":ISSUE_CREATED: %s\n" created)
      (format ":STATUS: %s\n" status)
      (format ":ASSIGNEE: %s\n" (or assignee "Unassigned"))
      (format ":PROJECT: %s\n" project)
