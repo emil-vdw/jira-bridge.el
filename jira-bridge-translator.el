@@ -28,13 +28,10 @@
                       #'jira-bridge/node-to-org-default)
            node))
 
-(defun jira-bridge/description-to-org (description level)
+(defun jira-bridge/description-to-org (description)
   "Convert Jira issue DESCRIPTION content to Org-mode syntax."
   (let ((content (alist-get 'content description)))
     (concat
-     (make-string (+ (or level 1) 1) ?*)
-     " Description"
-     "\n"
      (mapconcat
       #'jira-bridge/node-to-org content "\n"))))
 
@@ -106,7 +103,8 @@ segment at a time."
              ;; Increase the indent by 2 to account for the issue on
              ;; level 1, and the actual description heading at level
              ;; 2.
-             (+ level 2) ?*) " " content "\n")))
+             level ?#)
+            " " content "\n")))
 
 (defun jira-bridge/paragraph-to-org (node)
   "Convert a Jira paragraph NODE to Org-mode paragraph."
