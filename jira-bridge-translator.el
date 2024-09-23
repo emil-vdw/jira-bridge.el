@@ -99,21 +99,14 @@ segment at a time."
          (content (mapconcat #'jira-bridge/node-to-org
                              (alist-get 'content node)
                              "")))
-    (concat (make-string
-             ;; Increase the indent by 2 to account for the issue on
-             ;; level 1, and the actual description heading at level
-             ;; 2.
-             level ?#)
-            " " content "\n")))
+    (concat content "\n")))
 
 (defun jira-bridge/paragraph-to-org (node)
   "Convert a Jira paragraph NODE to Org-mode paragraph."
   (let ((content (mapconcat #'jira-bridge/node-to-org
                             (alist-get 'content node)
                             "")))
-    content
-    ;; (concat content "\n")
-    ))
+    content))
 
 (provide 'jira-bridge-translator)
 ;;; jira-bridge-translator.el ends here
