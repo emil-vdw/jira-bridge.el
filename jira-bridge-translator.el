@@ -89,6 +89,7 @@ segment at a time."
                        ("em" (concat "/" acc "/"))
                        ("underline" (concat "_" acc "_"))
                        ("link" (format "[[%s][%s]]" (alist-get 'href attrs) acc))
+                       ("code" (format "~%s~" acc))
                        (_ acc)))
                    text
                    marks)))
