@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024  Emil van der Westhuizen
 
 ;; Author: Emil van der Westhuizen <vdwemil@protonmail.com>
-;; Package-Requires: ((emacs "29") (request "0.3.3"))
+;; Package-Requires: ((emacs "29") (request "0.3.3") (dash "2.19.1")
 ;; Version: 0.1
 ;; Homepage: https://www.github.com/emil-vdw/jira-bridge.el
 ;; Keywords: convenience, tools
@@ -30,6 +30,7 @@
 (require 'request)
 (require 'auth-source)
 (require 'url-parse)
+(require 'dash)
 
 ;;; internal
 (require 'jira-bridge-core)
