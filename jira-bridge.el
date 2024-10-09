@@ -188,7 +188,7 @@
      ;; If the issue is an Epic, meaning it has subtasks, fetch and include all
      ;; subtasks as child org tasks.
      (when (and jira-bridge/pull-child-issues
-                )
+                has-child-issues)
        (let* ((child-issues-response
                (jira-bridge/api-get "search"
                                     `(("jql" . ,(concat "parent=" issue-key))

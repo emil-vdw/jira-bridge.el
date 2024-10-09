@@ -112,5 +112,5 @@ segment at a time."
     content))
 
 (provide 'jira-bridge-translator)
-;;; jira-bridge-translator.el ends here
 
+;;; jira-bridge-translator.el ends here
