@@ -37,15 +37,21 @@
 (require 'jira-bridge-translator)
 
 (defcustom jira-bridge/base-url nil
-  "Base URL for the Jira instance.")
+  "Base URL for the Jira instance."
+  :type '(string)
+  :group 'jira-bridge)
 
 (defcustom jira-bridge/jira-status-to-org-status
   ;; Items not in this alist will default to the uppercase Jira status.
   '(("To Do" . "TODO"))
-  "A map to convert Jira statuses to org todo statuses.")
+  "A map to convert Jira statuses to org todo statuses."
+  :type '(alist :key-type string :value-type string)
+  :group 'jira-bridge)
 
 (defcustom jira-bridge/pull-child-issues t
-  "Whether to pull child issues of the specified issue.")
+  "Whether to pull child issues of the specified issue."
+  :type '(boolean)
+  :group 'jira-bridge)
 
 (defun jira-bridge/api-url (&optional endpoint)
   "Construct the API URL to use when making requests."
@@ -123,7 +129,6 @@
          (issue-type (jira-bridge/alist-get-in fields '(issuetype name)))
          (project (jira-bridge/alist-get-in fields '(project name)))
          (created (alist-get 'created fields))
-         (url (alist-get 'self issue-data))
          ;; Map Jira priority to Org priority.
          (org-priority (cond ((string= priority "Highest") ?A)
                              ((string= priority "High") ?B)
@@ -202,13 +207,13 @@
 
 
 (defun jira-bridge/insert-issue (issue-id)
-  "Insert the corresponding Org Mode task at point for ISSUE-ID Jira issue key or URL."
+  "Insert an Org Mode task at point for ISSUE-ID Jira key or URL."
   (interactive "sJira issue key or url: ")
   (let ((issue-key
          ;; Try to extract the issue key from what is assumed to be an issue
          ;; URL, if that fails, we will assume that the user supplied the issue
          ;; key directly.
-         (condition-case err
+         (condition-case _
              (jira-bridge/extract-issue-key-from-url issue-id)
            (error issue-id))))
     (insert (jira-bridge/pull-issue issue-key))))
