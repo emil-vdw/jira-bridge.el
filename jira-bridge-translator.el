@@ -12,10 +12,12 @@
     (codeBlock . jira-bridge/code-block-to-org)
     (table . jira-bridge/table-to-org)
     (text . jira-bridge/text-to-org))
-  "")
+  "Transformation functions for Jira to org mode translation."
+  :type '(alist :key symbol :value function)
+  :group 'jira-bridge)
 
 (defun jira-bridge/node-to-org-default (node)
-  ""
+  "Default Jira node to org node translation function."
   (let ((paragraph-content (alist-get 'content node)))
          (mapconcat
           (lambda (item)
@@ -24,7 +26,7 @@
           "")))
 
 (defun jira-bridge/node-to-org (node)
-  ""
+  "Transform a Jira node to an org string representation."
   (funcall (alist-get (intern (alist-get 'type node))
                       jira-bridge/paragraph-transformers
                       #'jira-bridge/node-to-org-default)
