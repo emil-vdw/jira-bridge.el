@@ -1,3 +1,5 @@
+(require 'dash)
+
 (require 'jira-bridge-core)
 
 (defcustom jira-bridge/paragraph-transformers
