@@ -7,5 +7,5 @@
                     nil)))))
 
 (provide 'jira-bridge-core)
-;;; jira-bridge-core.el ends here
 
+;;; jira-bridge-core.el ends here
