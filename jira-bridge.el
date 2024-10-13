@@ -116,8 +116,8 @@
      "\n")))
 
 
-(defun jira-bridge/issue-data-to-org-task (issue-data level task-data)
-  "Convert Jira issue data into an Org Mode task at LEVEL with optional TASK-DATA."
+(defun jira-bridge/issue-alist (issue-data)
+  ""
   (let* ((key (alist-get 'key issue-data))
          (fields (alist-get 'fields issue-data))
          (summary (alist-get 'summary fields))
@@ -129,6 +129,7 @@
          (issue-type (jira-bridge/alist-get-in fields '(issuetype name)))
          (project (jira-bridge/alist-get-in fields '(project name)))
          (created (alist-get 'created fields))
+         (issue-url (concat jira-bridge/base-url "browse/" key))
          ;; Map Jira priority to Org priority.
          (org-priority (cond ((string= priority "Highest") ?A)
                              ((string= priority "High") ?B)
@@ -137,42 +138,63 @@
                              ((string= priority "Lowest") ?E)
                              (t ?C))))
     ;; Format the Org item.
-    (concat
-     ;; Indent child issues.
-     (apply #'concat (-repeat level "*"))
-     " "
-     (alist-get status jira-bridge/jira-status-to-org-status
-                (upcase status)
-                nil
-                #'equal)
-     " "
-     (format "[#%c] %s" org-priority summary)
-     ;; If tags were supplied, add them.
-     (when (plist-get task-data :tags)
-       (concat
-        " "
-        ":"
-        (string-join
-         (plist-get task-data :tags) ":")
-        ":"))
-     "\n"
+    `((:key . ,key)
+      (:summary . ,summary)
+      (:status . ,status)
+      (:description . ,description)
+      (:status . ,status)
+      (:assignee . ,assignee)
+      (:issue-type . ,issue-type)
+      (:project . ,project)
+      (:created . ,created)
+      (:priority . ,org-priority)
+      (:issue-url . ,issue-url))))
 
-     ;; Construct the task's properties from the Jira data.
-     ":PROPERTIES:\n"
-     (format ":JIRA_HOST: %s\n" jira-bridge/base-url)
-     (format ":ISSUE_URL: %s\n" (concat jira-bridge/base-url "browse/" key))
-     (format ":ISSUE_NUMBER: %s\n" key)
-     (format ":ISSUE_TYPE: %s\n" issue-type)
-     (format ":ISSUE_CREATED: %s\n" created)
-     (format ":STATUS: %s\n" status)
-     (format ":ASSIGNEE: %s\n" (or assignee "Unassigned"))
-     (format ":PROJECT: %s\n" project)
-     ;; If additional properties have been supplied, add them.
-     (when (plist-get task-data :properties)
-       (concat (--map (concat ":" (car it) ": " (cdr it) "\n")
-                      (plist-get task-data :properties))))
-     ":END:\n\n"
-     description)))
+(defun jira-bridge/issue-alist-to-org-task-string (org-task-data level task-data)
+  "Convert Jira issue data into an Org Mode task at LEVEL with optional TASK-DATA."
+  ;; Format the Org item.
+  (concat
+   ;; Indent child issues.
+   (apply #'concat (-repeat level "*"))
+   " "
+   (alist-get (alist-get :status org-task-data)
+              jira-bridge/jira-status-to-org-status
+              (upcase (alist-get :status org-task-data))
+              nil
+              #'equal)
+   " "
+   (format "[#%c] %s"
+           (alist-get :priority org-task-data)
+           (alist-get :summary org-task-data))
+   ;; If tags were supplied, add them.
+   (when (plist-get task-data :tags)
+     (concat
+      " "
+      ":"
+      (string-join
+       (plist-get task-data :tags) ":")
+      ":"))
+   "\n"
+
+   ;; Construct the task's properties from the Jira data.
+   ":PROPERTIES:\n"
+   (format ":JIRA_HOST: %s\n" jira-bridge/base-url)
+   (format ":ISSUE_URL: %s\n" (alist-get :issue-url org-task-data))
+   (format ":ISSUE_NUMBER: %s\n"
+           (alist-get :key org-task-data)
+           (alist-get :key org-task-data))
+   (format ":ISSUE_TYPE: %s\n" (alist-get :issue-type org-task-data))
+   (format ":ISSUE_CREATED: %s\n" (alist-get :created org-task-data))
+   (format ":STATUS: %s\n" (alist-get :status org-task-data))
+   (format ":ASSIGNEE: %s\n" (or (alist-get :assignee org-task-data)
+                                 "Unassigned"))
+   (format ":PROJECT: %s\n" (alist-get :project org-task-data))
+   ;; If additional properties have been supplied, add them.
+   (when (plist-get task-data :properties)
+     (concat (--map (concat ":" (car it) ": " (cdr it) "\n")
+                    (plist-get task-data :properties))))
+   ":END:\n\n"
+   (alist-get :description org-task-data)))
 
 (defun jira-bridge/pull-issue (issue-key &optional level task-data)
   "Create an Org Mode item from Jira issue data."
@@ -188,7 +210,8 @@
                                                                '(fields subtasks)))))))
     ;; Format the Org item.
     (concat
-     (jira-bridge/issue-data-to-org-task issue-data level task-data)
+     (jira-bridge/issue-alist-to-org-task-string
+      (jira-bridge/issue-alist issue-data) level task-data)
 
      ;; If the issue is an Epic, meaning it has subtasks, fetch and include all
      ;; subtasks as child org tasks.
@@ -205,7 +228,6 @@
                                        (jira-bridge/pull-issue it (+ level 1)))
                                child-issue-keys)))))))
 
-
 (defun jira-bridge/insert-issue (issue-id)
   "Insert an Org Mode task at point for ISSUE-ID Jira key or URL."
   (interactive "sJira issue key or url: ")
@@ -220,5 +242,5 @@
 
 
 (provide 'jira-bridge)
-;;; jira-bridge.el ends here
 
+;;; jira-bridge.el ends here
