@@ -181,7 +181,6 @@
    (format ":JIRA_HOST: %s\n" jira-bridge/base-url)
    (format ":ISSUE_URL: %s\n" (alist-get :issue-url org-task-data))
    (format ":ISSUE_NUMBER: %s\n"
-           (alist-get :key org-task-data)
            (alist-get :key org-task-data))
    (format ":ISSUE_TYPE: %s\n" (alist-get :issue-type org-task-data))
    (format ":ISSUE_CREATED: %s\n" (alist-get :created org-task-data))
